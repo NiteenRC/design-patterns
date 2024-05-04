@@ -69,17 +69,12 @@ public class StockImpl {
         apple.registerObserver(investor2);
 
         // Simulate price change
-        apple.setPrice(155.00);
-        // Output:
-        // John received update: AAPL price: 155.0
-        // Alice received update: AAPL price: 155.0
+        apple.setPrice(155.00); // Notified to John and Alice
 
         // Remove one observer
         apple.removeObserver(investor2);
 
         // Simulate another price change
-        apple.setPrice(160.00);
-        // Output:
-        // John received update: AAPL price: 160.0
+        apple.setPrice(160.00); // Notified to John only because removed Alice
     }
 }

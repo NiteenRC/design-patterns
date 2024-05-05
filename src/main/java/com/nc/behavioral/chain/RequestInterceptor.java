@@ -1,40 +1,39 @@
 package com.nc.behavioral.chain;
 
-// Handler interface
-interface HttpRequestHandler {
-    void handle(HttpRequest request);
+import lombok.Data;
 
-    void setNextHandler(HttpRequestHandler nextHandler);
+// Handler interface
+interface Handler {
+    void handle(HttpRequest request); // Method to handle requests
+
+    void setNextHandler(Handler handler); // Method to set the next handler in the chain
 }
 
-class HttpRequest {
-    private final String path;
-    private final String method;
-    private final String body;
+// Abstract class implementing the Handler interface
+abstract class AbstractHandler implements Handler {
+    Handler nextHandler; // Reference to the next handler in the chain
 
+    public void setNextHandler(Handler handler) {
+        this.nextHandler = handler;
+    }
+}
+
+@Data // Lombok annotation to generate getters and setters
+class HttpRequest {
+    private final String path; // Path of the HTTP request
+    private final String method; // HTTP method of the request
+    private final String body; // Body of the request
+
+    // Constructor to initialize the HttpRequest object
     HttpRequest(String path, String method, String body) {
         this.path = path;
         this.method = method;
         this.body = body;
     }
-
-    public String getPath() {
-        return path;
-    }
-
-    public String getMethod() {
-        return method;
-    }
-
-    public String getBody() {
-        return body;
-    }
 }
 
 // Concrete Handler for authentication
-class AuthenticationHandler implements HttpRequestHandler {
-    private HttpRequestHandler nextHandler;
-
+class AuthenticationHandler extends AbstractHandler {
     @Override
     public void handle(HttpRequest request) {
         // Simulate authentication logic
@@ -42,87 +41,69 @@ class AuthenticationHandler implements HttpRequestHandler {
             System.out.println("User is not logged in.");
             return;
         }
-
-        if (nextHandler != null) {
-            nextHandler.handle(request);
-        }
+        this.nextHandler.handle(request); // Pass the request to the next handler
     }
 
+    // Simulated method to check if the user is logged in
     private boolean isLoggedIn(HttpRequest request) {
-        // Simulate authentication check
         // In a real application, this would involve checking session, cookies, or tokens
         return true;
-    }
-
-    public void setNextHandler(HttpRequestHandler nextHandler) {
-        this.nextHandler = nextHandler;
     }
 }
 
 // Concrete Handler for logging
-class LoggingHandler implements HttpRequestHandler {
-    private HttpRequestHandler nextHandler;
-
+class LoggingHandler extends AbstractHandler {
     @Override
     public void handle(HttpRequest request) {
         // Simulate logging
         System.out.println("Logging request: " + request.getMethod() + " " + request.getPath());
 
-        if (nextHandler != null) {
-            nextHandler.handle(request);
-        }
-    }
-
-    public void setNextHandler(HttpRequestHandler nextHandler) {
-        this.nextHandler = nextHandler;
+        this.nextHandler.handle(request); // Pass the request to the next handler
     }
 }
 
 // Concrete Handler for validation
-class ValidationHandler implements HttpRequestHandler {
-    private HttpRequestHandler nextHandler;
-
+class ValidationHandler extends AbstractHandler {
     @Override
     public void handle(HttpRequest request) {
-        // Simulate validation
+        // Check if the request path is "/create" and the request body is valid
         if (request.getPath().equals("/create") && !isValid(request.getBody())) {
             System.out.println("Request body is not valid.");
-            return;
-        }
-
-        if (nextHandler != null) {
-            nextHandler.handle(request);
+        } else {
+            System.out.println("All handlers passed");
         }
     }
 
+    // Simulated method to validate the request body
     private boolean isValid(String body) {
-        // Simulate validation logic
         return body != null && !body.isEmpty();
-    }
-
-    public void setNextHandler(HttpRequestHandler nextHandler) {
-        this.nextHandler = nextHandler;
     }
 }
 
 // Client code
 public class RequestInterceptor {
     public static void main(String[] args) {
-        HttpRequestHandler authenticationHandler = new AuthenticationHandler();
-        HttpRequestHandler loggingHandler = new LoggingHandler();
-        HttpRequestHandler validationHandler = new ValidationHandler();
+        Handler handler = getHandlers(); // Get the chain of handlers
 
-        // Construct the chain of responsibility
-        authenticationHandler.setNextHandler(loggingHandler);
-        loggingHandler.setNextHandler(validationHandler);
-
-        // Simulate incoming HTTP request
+        // Simulate incoming HTTP requests
         HttpRequest request1 = new HttpRequest("/admin", "GET", "");
         HttpRequest request2 = new HttpRequest("/create", "POST", "Some data");
 
         // Handle requests
-        authenticationHandler.handle(request1); // Output: Logging request: GET /admin
-        authenticationHandler.handle(request2); // Output: Logging request: POST /create
+        handler.handle(request1); // Output: Logging request: GET /admin
+        handler.handle(request2); // Output: Logging request: POST /create
         // Output: Request body is not valid.
+    }
+
+    // Method to construct the chain of responsibility
+    private static Handler getHandlers() {
+        Handler authenticationHandler = new AuthenticationHandler();
+        Handler loggingHandler = new LoggingHandler();
+        Handler validationHandler = new ValidationHandler();
+
+        // Construct the chain of responsibility
+        authenticationHandler.setNextHandler(loggingHandler);
+        loggingHandler.setNextHandler(validationHandler);
+        return authenticationHandler; // Return the first handler in the chain
     }
 }

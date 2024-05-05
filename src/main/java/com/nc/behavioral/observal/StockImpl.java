@@ -12,7 +12,7 @@ interface Subject {
 }
 
 interface Observer {
-    void update(String symbol, double price);
+    void update(String stockSymbol, double stockPrice);
 }
 
 class Stock implements Subject {
@@ -54,27 +54,27 @@ class Investor implements Observer {
     }
 
     @Override
-    public void update(String symbol, double price) {
-        System.out.println(name + " received update: " + symbol + " price: " + price);
+    public void update(String stockSymbol, double stockPrice) {
+        System.out.println(name + " received update: " + stockSymbol + " price: " + stockPrice);
     }
 }
 
 public class StockImpl {
     public static void main(String[] args) {
-        Stock apple = new Stock("AAPL", 150.00);
+        Stock appleStock = new Stock("AAPL", 150.00);
         Investor investor1 = new Investor("John");
         Investor investor2 = new Investor("Alice");
 
-        apple.registerObserver(investor1);
-        apple.registerObserver(investor2);
+        appleStock.registerObserver(investor1);
+        appleStock.registerObserver(investor2);
 
         // Simulate price change
-        apple.setPrice(155.00); // Notified to John and Alice
+        appleStock.setPrice(155.00); // Notified to John and Alice
 
         // Remove one observer
-        apple.removeObserver(investor2);
+        appleStock.removeObserver(investor2);
 
         // Simulate another price change
-        apple.setPrice(160.00); // Notified to John only because removed Alice
+        appleStock.setPrice(160.00); // Notified to John only because Alice was removed
     }
 }

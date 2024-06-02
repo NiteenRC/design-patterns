@@ -13,6 +13,7 @@ interface Handler {
 abstract class AbstractHandler implements Handler {
     Handler nextHandler; // Reference to the next handler in the chain
 
+    @Override
     public void setNextHandler(Handler handler) {
         this.nextHandler = handler;
     }
